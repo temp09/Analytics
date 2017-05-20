@@ -28,8 +28,9 @@ public class Star : MonoBehaviour, IPointerClickHandler {
         transform.Rotate(Vector3.forward, rotStep);
 	}
 
-    void DestroyThisStar()
+    public void DestroyThisStar()
     {
+        gameManager.points++;
         StarExplosion starParticles = Instantiate(starExplosion).GetComponent<StarExplosion>();
         starParticles.transform.position = transform.position;
         ParticleSystem.VelocityOverLifetimeModule goldVoL = starParticles.gold.velocityOverLifetime;
@@ -60,8 +61,10 @@ public class Star : MonoBehaviour, IPointerClickHandler {
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        gameManager.points++;
-        DestroyThisStar();
+        if (!gameManager.isPaused)
+        {
+            DestroyThisStar();
+        }
     }
 
     private void OnTriggerEnter(Collider other)

@@ -18,9 +18,18 @@ public class GameManager : MonoBehaviour {
     public Text pointDisplay;
     public Text timeDisplay;
     public Text countdownText;
+    public bool isCountingDown;
 
     public GameObject gameOverScreen;
     public Text finalPoints;
+    public Text gameOverTitleText;
+    private bool didWin = false;
+
+    public Text pausedText;
+    public bool isPaused = false;
+
+    public GameObject shopWindow;
+    public bool isShopOpen = false;
 
     public GameObject starPrefab;
     public Transform starContainer;
@@ -28,6 +37,12 @@ public class GameManager : MonoBehaviour {
     private bool isGameActive = false;
     private float timeElapsed;
     private IEnumerator starCoroutine;
+    private IEnumerator countdownCoroutine;
+
+    public bool biggerClick = false;
+    public bool lightningBolt = false;
+    public GameObject lightningBoltButton;
+    public bool extraLife = false;
 
     private void Awake()
     {
@@ -53,7 +68,7 @@ public class GameManager : MonoBehaviour {
             timeElapsed -= Time.deltaTime;
             if(timeElapsed <= 0.0f)
             {
-                StopGame();
+                FinishGame();
             }
         }
 	}
@@ -64,32 +79,180 @@ public class GameManager : MonoBehaviour {
         gameOverScreen.SetActive(false);
         countdownText.gameObject.SetActive(true);
         gameScreen.raycastTarget = false;
-        StartCoroutine(StartCountdown());
+        countdownCoroutine = StartCountdown();
+        StartCoroutine(countdownCoroutine);
         timeElapsed = 10.0f;
+    }
+
+    public void RestartGame()
+    {
+        StopGame();
+        NewGame();
     }
 
     public void StopGame()
     {
-        googleAnalytics.LogEvent("Score", "Submit Score", "Final ScorE", points);
-        Analytics.CustomEvent("ButtonPress", new Dictionary<string, object>
-        {
-            {"Final Score ", points }
-        });
-        StopCoroutine(starCoroutine);
-        gameOverScreen.SetActive(true);
+        if(starCoroutine != null)
+            StopCoroutine(starCoroutine);
+        if (isCountingDown)
+            StopCoroutine(countdownCoroutine);
         isGameActive = false;
         gameScreen.raycastTarget = true;
-        timeElapsed = 0;
-        finalPoints.text = points.ToString();
+        timeElapsed = 0;     
         foreach(Transform star in starContainer)
         {
             star.GetComponent<Star>().DisappearThisStar();
         }
     }
 
+    public void FinishGame()
+    {
+        StopGame();
+        googleAnalytics.LogEvent("Score", "Submit Score", "Final Score", points);
+        Analytics.CustomEvent("ButtonPress", new Dictionary<string, object>
+        {
+            {"Final Score ", points }
+        });
+        finalPoints.text = points.ToString();
+        gameOverTitleText.text = didWin ? "You Won!" : "Great Work";
+        gameOverScreen.SetActive(true);        
+    }
+
+    public void PauseGame()
+    {
+        if (isPaused)
+        {
+            isPaused = false;
+            pausedText.gameObject.SetActive(false);
+            Time.timeScale = 1;
+            if (isCountingDown)
+            {
+                countdownText.gameObject.SetActive(true);
+            }
+        }
+        else
+        {
+            isPaused = true;
+            pausedText.gameObject.SetActive(true);
+            Time.timeScale = 0;
+            if (isCountingDown)
+            {
+                countdownText.gameObject.SetActive(false);
+            }
+        }      
+    }
+
+    public void UseLighting()
+    {
+        if (lightningBolt)
+        {
+            lightningBolt = false;
+            lightningBoltButton.SetActive(false);
+            foreach (Transform star in starContainer)
+            {
+                star.GetComponent<Star>().DestroyThisStar();
+            }
+        }
+    }
+
+    public void PressShopButton()
+    {
+        if (isShopOpen)
+        {
+            CloseShop();
+        }
+        else
+        {
+            OpenShop();
+        }
+    }
+
+    private void OpenShop()
+    {
+        googleAnalytics.LogScreen("Shop Screen");
+        if (isCountingDown)
+        {
+            countdownText.gameObject.SetActive(false);
+        }
+        shopWindow.SetActive(true);
+        isShopOpen = true;
+        Time.timeScale = 0;
+        if (isPaused)
+            pausedText.gameObject.SetActive(false);
+    }
+
+    private void CloseShop()
+    {
+        if (isCountingDown)
+        {
+            countdownText.gameObject.SetActive(true);
+        }
+        shopWindow.SetActive(false);
+        isShopOpen = false;
+        if (!isPaused)
+            Time.timeScale = 1;
+        else
+            pausedText.gameObject.SetActive(true);
+    }
+
+    public void BuyBiggerClick()
+    {
+        if (!biggerClick)
+        {
+            googleAnalytics.LogItem("12345", "Bigger Click", "Click_SKU", "Powerups", 100.00, 1);
+            googleAnalytics.LogTransaction("12345", "In-Game Store", 100.00, 0, 0);
+            biggerClick = true;
+            CloseShop();
+        }
+    }
+
+    public void BuyLightningBolt()
+    {
+        if (!lightningBolt)
+        {
+            googleAnalytics.LogItem("12345", "Lightning Bolt", "Lightning_SKU", "Powerups", 200.00, 1);
+            googleAnalytics.LogTransaction("12345", "In-Game Store", 200.00, 0, 0);
+            lightningBolt = true;
+            lightningBoltButton.SetActive(true);
+            CloseShop();
+        }
+    }
+
+    public void BuyExtraLife()
+    {
+        if (!extraLife)
+        {
+            googleAnalytics.LogItem("12345", "Extra Life", "Life_SKU", "Powerups", 300.00, 1);
+            googleAnalytics.LogTransaction("12345", "In-Game Store", 300.00, 0, 0);
+            extraLife = true;
+            CloseShop();
+        }
+    }
+
+    public void Buy10Points()
+    {
+        googleAnalytics.LogItem("12345", "10 Points", "10Points_SKU", "Points", 500.00, 1);
+        googleAnalytics.LogTransaction("12345", "In-Game Store", 500.00, 0, 0);
+        points += 10;
+        CloseShop();
+    }
+
+    public void BuyWin()
+    {
+        googleAnalytics.LogItem("12345", "Win Game", "Win_SKU", "Points", 1000.00, 1);
+        googleAnalytics.LogTransaction("12345", "In-Game Store", 1000.00, 0, 0);
+        didWin = true;
+        CloseShop();
+        FinishGame();
+    }
+
     public void ShootStar()
     {
         Star newStar = Instantiate<GameObject>(starPrefab).GetComponent<Star>();
+        if (biggerClick)
+        {
+            newStar.GetComponent<SphereCollider>().radius = 1.5f;
+        }
         newStar.transform.parent = starContainer;
         float xPos, zPos;
         float xTarget, zTarget;
@@ -124,6 +287,7 @@ public class GameManager : MonoBehaviour {
 
     public IEnumerator StartCountdown()
     {
+        isCountingDown = true;
         countdownText.text = "Ready?";
         yield return new WaitForSeconds(1);
         countdownText.text = 3.ToString();
@@ -135,6 +299,7 @@ public class GameManager : MonoBehaviour {
         countdownText.text = "GO!";
         yield return new WaitForSeconds(0.5f);
         isGameActive = true;
+        isCountingDown = false;
         countdownText.gameObject.SetActive(false);
         starCoroutine = CreateStars();
         StartCoroutine(starCoroutine);
