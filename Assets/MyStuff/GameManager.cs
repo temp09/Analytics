@@ -108,7 +108,7 @@ public class GameManager : MonoBehaviour {
     public void FinishGame()
     {
         StopGame();
-        googleAnalytics.LogEvent("Score", "Submit Score", "Final Score", points);
+        googleAnalytics.LogEvent("Score", "Submit Score", points.ToString(), 1);
         Analytics.CustomEvent("ButtonPress", new Dictionary<string, object>
         {
             {"Final Score ", points }
