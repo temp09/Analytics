@@ -5,12 +5,14 @@ using UnityEngine.Analytics;
 
 public class Analytical : MonoBehaviour {
 
+    public GoogleAnalyticsV4 googleAnalytics;
+
     int myPoints = 10;
     int birthYear = 1991;
 
 	// Use this for initialization
 	void Start () {
-		
+        googleAnalytics.LogScreen("Intro Screen");
 	}
 	
 	// Update is called once per frame
