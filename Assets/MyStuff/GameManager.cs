@@ -112,6 +112,7 @@ public class GameManager : MonoBehaviour {
         }
         else
         {
+            googleAnalytics.LogEvent("Game Control", "Reset", "Label", 1);
             StopGame();
             NewGame();
         }
@@ -130,6 +131,10 @@ public class GameManager : MonoBehaviour {
         {
             star.GetComponent<Star>().DisappearThisStar();
         }
+        biggerClick = false;
+        extraLife = false;
+        lightningBolt = false;
+        lightningBoltButton.SetActive(false);
     }
 
     public void FinishGame()
@@ -164,6 +169,7 @@ public class GameManager : MonoBehaviour {
         }
         else
         {
+            googleAnalytics.LogEvent("Game Control", "Pause", "Label", 1);
             isPaused = true;
             pausedText.gameObject.SetActive(true);
             Time.timeScale = 0;
@@ -237,6 +243,7 @@ public class GameManager : MonoBehaviour {
     {
         if (!biggerClick)
         {
+            googleAnalytics.LogEvent("Shop", "Purchase", "Bigger Click", 100);
             googleAnalytics.LogItem("12345", "Bigger Click", "Click_SKU", "Powerups", 100.00, 1);
             googleAnalytics.LogTransaction("12345", "In-Game Store", 100.00, 0, 0);
             Analytics.Transaction("CLICK", 1, "AUD");
@@ -249,6 +256,7 @@ public class GameManager : MonoBehaviour {
     {
         if (!lightningBolt)
         {
+            googleAnalytics.LogEvent("Shop", "Purchase", "Lightning Bolt", 200);
             googleAnalytics.LogItem("12345", "Lightning Bolt", "Lightning_SKU", "Powerups", 200.00, 1);
             googleAnalytics.LogTransaction("12345", "In-Game Store", 200.00, 0, 0);
             Analytics.Transaction("BOLT", 2, "AUD");
@@ -262,6 +270,7 @@ public class GameManager : MonoBehaviour {
     {
         if (!extraLife)
         {
+            googleAnalytics.LogEvent("Shop", "Purchase", "Extra Life", 300);
             googleAnalytics.LogItem("12345", "Extra Life", "Life_SKU", "Powerups", 300.00, 1);
             googleAnalytics.LogTransaction("12345", "In-Game Store", 300.00, 0, 0);
             Analytics.Transaction("LIFE", 3, "AUD");
@@ -272,6 +281,7 @@ public class GameManager : MonoBehaviour {
 
     public void Buy10Points()
     {
+        googleAnalytics.LogEvent("Shop", "Purchase", "10 Points", 500);
         googleAnalytics.LogItem("12345", "10 Points", "10Points_SKU", "Points", 500.00, 1);
         googleAnalytics.LogTransaction("12345", "In-Game Store", 500.00, 0, 0);
         Analytics.Transaction("10POINTS", 5, "AUD");
@@ -281,6 +291,7 @@ public class GameManager : MonoBehaviour {
 
     public void BuyWin()
     {
+        googleAnalytics.LogEvent("Shop", "Purchase", "Win Game", 1000);
         googleAnalytics.LogItem("12345", "Win Game", "Win_SKU", "Points", 1000.00, 1);
         googleAnalytics.LogTransaction("12345", "In-Game Store", 1000.00, 0, 0);
         Analytics.Transaction("WIN", 10, "AUD");
