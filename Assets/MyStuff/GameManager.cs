@@ -13,6 +13,7 @@ public class GameManager : MonoBehaviour {
     public string playerName;
 
     public Image gameScreen;
+    public Transform canvasUI;
 
     public int points;
     public Text pointDisplay;
@@ -24,6 +25,7 @@ public class GameManager : MonoBehaviour {
     public Text finalPoints;
     public Text gameOverTitleText;
     private bool didWin = false;
+    private bool isGameComplete = false;
 
     public Text pausedText;
     public bool isPaused = false;
@@ -33,6 +35,8 @@ public class GameManager : MonoBehaviour {
 
     public GameObject starPrefab;
     public Transform starContainer;
+
+    public GameObject clickPrefab;
 
     private bool isGameActive = false;
     private float timeElapsed;
@@ -70,6 +74,16 @@ public class GameManager : MonoBehaviour {
             {
                 FinishGame();
             }
+            if (Input.GetMouseButtonDown(0))
+            {
+                RectTransform newClick = Instantiate(clickPrefab).GetComponent<RectTransform>();
+                newClick.parent = canvasUI;
+                if (biggerClick)
+                {
+                    newClick.sizeDelta = new Vector2(40, 40);
+                }
+                newClick.transform.position = Input.mousePosition;
+            }
         }
 	}
 
@@ -86,8 +100,21 @@ public class GameManager : MonoBehaviour {
 
     public void RestartGame()
     {
-        StopGame();
-        NewGame();
+        if (isShopOpen)
+        {
+            return;
+        }
+        if (isPaused)
+        {
+            PauseGame();
+            StopGame();
+            NewGame();
+        }
+        else
+        {
+            StopGame();
+            NewGame();
+        }
     }
 
     public void StopGame()
@@ -108,6 +135,7 @@ public class GameManager : MonoBehaviour {
     public void FinishGame()
     {
         StopGame();
+        isGameComplete = true;
         googleAnalytics.LogEvent("Score", "Submit Score", points.ToString(), 1);
         Analytics.CustomEvent("ButtonPress", new Dictionary<string, object>
         {
@@ -120,6 +148,10 @@ public class GameManager : MonoBehaviour {
 
     public void PauseGame()
     {
+        if (isShopOpen || isGameComplete)
+        {
+            return;
+        }
         if (isPaused)
         {
             isPaused = false;
@@ -179,6 +211,8 @@ public class GameManager : MonoBehaviour {
         Time.timeScale = 0;
         if (isPaused)
             pausedText.gameObject.SetActive(false);
+        if(isGameComplete)
+            gameOverScreen.SetActive(false);
     }
 
     private void CloseShop()
@@ -193,6 +227,10 @@ public class GameManager : MonoBehaviour {
             Time.timeScale = 1;
         else
             pausedText.gameObject.SetActive(true);
+        if (isGameComplete)
+        {
+            gameOverScreen.SetActive(true);
+        }
     }
 
     public void BuyBiggerClick()
@@ -201,6 +239,7 @@ public class GameManager : MonoBehaviour {
         {
             googleAnalytics.LogItem("12345", "Bigger Click", "Click_SKU", "Powerups", 100.00, 1);
             googleAnalytics.LogTransaction("12345", "In-Game Store", 100.00, 0, 0);
+            Analytics.Transaction("CLICK", 1, "AUD");
             biggerClick = true;
             CloseShop();
         }
@@ -212,6 +251,7 @@ public class GameManager : MonoBehaviour {
         {
             googleAnalytics.LogItem("12345", "Lightning Bolt", "Lightning_SKU", "Powerups", 200.00, 1);
             googleAnalytics.LogTransaction("12345", "In-Game Store", 200.00, 0, 0);
+            Analytics.Transaction("BOLT", 2, "AUD");
             lightningBolt = true;
             lightningBoltButton.SetActive(true);
             CloseShop();
@@ -224,6 +264,7 @@ public class GameManager : MonoBehaviour {
         {
             googleAnalytics.LogItem("12345", "Extra Life", "Life_SKU", "Powerups", 300.00, 1);
             googleAnalytics.LogTransaction("12345", "In-Game Store", 300.00, 0, 0);
+            Analytics.Transaction("LIFE", 3, "AUD");
             extraLife = true;
             CloseShop();
         }
@@ -233,6 +274,7 @@ public class GameManager : MonoBehaviour {
     {
         googleAnalytics.LogItem("12345", "10 Points", "10Points_SKU", "Points", 500.00, 1);
         googleAnalytics.LogTransaction("12345", "In-Game Store", 500.00, 0, 0);
+        Analytics.Transaction("10POINTS", 5, "AUD");
         points += 10;
         CloseShop();
     }
@@ -241,6 +283,7 @@ public class GameManager : MonoBehaviour {
     {
         googleAnalytics.LogItem("12345", "Win Game", "Win_SKU", "Points", 1000.00, 1);
         googleAnalytics.LogTransaction("12345", "In-Game Store", 1000.00, 0, 0);
+        Analytics.Transaction("WIN", 10, "AUD");
         didWin = true;
         CloseShop();
         FinishGame();
@@ -288,6 +331,7 @@ public class GameManager : MonoBehaviour {
     public IEnumerator StartCountdown()
     {
         isCountingDown = true;
+        isGameComplete = false;
         countdownText.text = "Ready?";
         yield return new WaitForSeconds(1);
         countdownText.text = 3.ToString();

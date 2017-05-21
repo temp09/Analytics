@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class Star : MonoBehaviour, IPointerClickHandler {
+public class Star : MonoBehaviour, IPointerDownHandler {
 
     public Collider myCollider;
     public GameManager gameManager;
@@ -59,7 +59,7 @@ public class Star : MonoBehaviour, IPointerClickHandler {
         Destroy(gameObject);
     }
 
-    public void OnPointerClick(PointerEventData eventData)
+    public void OnPointerDown(PointerEventData eventData)
     {
         if (!gameManager.isPaused)
         {
